@@ -4,11 +4,21 @@
 
 package vulnerable
 
-import "os"
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+)
 
-func Open(filepath string) (*os.File, error) {
+func Open(path string) (*os.File, error) {
 	// Nothing special is needed to make Open vulnerable to local file inclusion
 	// (LFi). LFi is actually possible when the filepath is not properly
 	// restricted.
-	return os.Open(filepath)
+	for _, seg := range strings.Split(filepath.ToSlash(path), "/") {
+		if seg == ".." {
+			return nil, fmt.Errorf("invalid file path")
+		}
+	}
+	return os.Open(path)
 }
